@@ -14,7 +14,7 @@ import (
 const create = `-- name: Create :one
 INSERT INTO users (email, firstname, lastname, password_hash)
 VALUES ($1, $2, $3, $4)
-RETURNING id, email, firstname, lastname, password_hash, created_at, updated_at
+RETURNING id, email, firstname, lastname, password_hash, verified, created_at, updated_at
 `
 
 type CreateParams struct {
@@ -38,6 +38,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (User, error) {
 		&i.Firstname,
 		&i.Lastname,
 		&i.PasswordHash,
+		&i.Verified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -45,7 +46,7 @@ func (q *Queries) Create(ctx context.Context, arg CreateParams) (User, error) {
 }
 
 const findByEmail = `-- name: FindByEmail :one
-SELECT id, email, firstname, lastname, password_hash, created_at, updated_at FROM users WHERE email = $1
+SELECT id, email, firstname, lastname, password_hash, verified, created_at, updated_at FROM users WHERE email = $1
 `
 
 func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
@@ -57,6 +58,7 @@ func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
 		&i.Firstname,
 		&i.Lastname,
 		&i.PasswordHash,
+		&i.Verified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -64,7 +66,7 @@ func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
 }
 
 const findByID = `-- name: FindByID :one
-SELECT id, email, firstname, lastname, password_hash, created_at, updated_at FROM users WHERE ID = $1
+SELECT id, email, firstname, lastname, password_hash, verified, created_at, updated_at FROM users WHERE ID = $1
 `
 
 func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (User, error) {
@@ -76,8 +78,20 @@ func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.Firstname,
 		&i.Lastname,
 		&i.PasswordHash,
+		&i.Verified,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const verifyUserByID = `-- name: VerifyUserByID :exec
+UPDATE users
+SET verified = true
+WHERE id = $1
+`
+
+func (q *Queries) VerifyUserByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, verifyUserByID, id)
+	return err
 }

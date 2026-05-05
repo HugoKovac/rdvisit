@@ -32,6 +32,7 @@ type Service struct {
 type IUserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
+	VerifyUserByID(ctx context.Context, id uuid.UUID) error
 }
 
 func NewService(repo IRepository, userRepo IUserRepository, mailer IMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
@@ -69,6 +70,9 @@ func (s *Service) Verify(ctx context.Context, userID uuid.UUID, code string) (bo
 	}
 	if strings.Compare(vc.Code, code) != 0 && vc.ExpiresAt.After(time.Now()) {
 		return false, errors.Wrap(errors.Unauthorized)
+	}
+	if err := s.userRepo.VerifyUserByID(ctx, userID); err != nil {
+		return false, err
 	}
 	return true, nil
 }

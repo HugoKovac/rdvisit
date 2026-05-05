@@ -9,3 +9,8 @@ SELECT * FROM users WHERE email = $1;
 -- name: FindByID :one
 SELECT * FROM users WHERE ID = $1;
 
+-- name: VerifyUserByID :exec
+UPDATE users
+SET verified = true
+WHERE id = $1;
+

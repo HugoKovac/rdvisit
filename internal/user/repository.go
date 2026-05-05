@@ -13,6 +13,7 @@ type IRepository interface {
 	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
+	VerifyUserByID(ctx context.Context, id uuid.UUID) error
 }
 
 // ==================================
@@ -89,4 +90,11 @@ func (r *sqlcRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Us
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 	}, nil
+}
+
+func (r *sqlcRepository) VerifyUserByID(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.VerifyUserByID(ctx, id); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
 }

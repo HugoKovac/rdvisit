@@ -25,6 +25,7 @@ type User struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
 	PasswordHash string    `json:"password_hash"`
+	Verified     *bool     `json:"verified"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
