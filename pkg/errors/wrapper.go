@@ -17,7 +17,7 @@ type ErrorWrapper struct {
 }
 
 func (te *ErrorWrapper) FormatTrace() error {
-	return fmt.Errorf("%s:%d - %w", te.file, te.line, te.error)
+	return fmt.Errorf("[%s:%d] - %w", te.file, te.line, te.error)
 }
 
 func Wrap(v any) error {

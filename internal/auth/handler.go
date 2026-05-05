@@ -116,7 +116,7 @@ func (h *Handler) Refresh(c fiber.Ctx) error {
 
 	claims, err := h.svc.ValidateToken(body.RefreshToken)
 	if err != nil {
-		return errors.Wrap(errors.Unauthorized)
+		return err
 	}
 
 	if err := h.svc.DeleteRefreshToken(ctx, body.RefreshToken); err != nil {

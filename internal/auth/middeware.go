@@ -22,7 +22,7 @@ func AuthMiddleware(svc *Service) fiber.Handler {
 
 		token, err := svc.ValidateToken(tokenString)
 		if err != nil {
-			return errors.Wrap(err)
+			return err
 		}
 
 		c.Locals("userClaims", domain.User{

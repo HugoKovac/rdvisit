@@ -1,8 +1,8 @@
 package user
 
 import (
-	"project/clean/internal/domain"
 	"project/clean/pkg/errors"
+	"project/clean/pkg/fiber/fibercontext"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
@@ -41,9 +41,9 @@ type UserResponse struct {
 
 func (h *Handler) Me(c fiber.Ctx) error {
 	ctx := c.RequestCtx()
-	u, exists := c.Locals("userClaims").(domain.User)
-	if !exists {
-		return errors.Wrap(errors.NotFound)
+	u, err := fibercontext.GetUserClaims(c)
+	if err != nil {
+		return err
 	}
 
 	fullUser, err := h.svc.GetUserByID(ctx, u.ID)

@@ -157,7 +157,7 @@ func (s *Service) ValidateToken(tokenString string) (*TokenCustomClaims, error) 
 		return []byte(s.jwtSecret), nil
 	})
 	if err != nil {
-		return nil, errors.Wrap(errors.Unauthorized)
+		return nil, errors.Wrap(err)
 	}
 
 	if !token.Valid {

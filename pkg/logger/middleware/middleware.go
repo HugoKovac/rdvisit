@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func parseRequestFields(c fiber.Ctx) slog.Attr {
@@ -64,6 +65,8 @@ func determineError(reqErr error) (status int, msg any) {
 			collErrors = append(collErrors, InvalidArgument{Field: f.StructField(), Value: f.Value(), Tag: f.Tag(), Param: f.Param(), Actual: f.ActualTag()})
 		}
 		status, msg = http.StatusUnprocessableEntity, collErrors
+	case errors.Is(reqErr, jwt.ErrTokenExpired):
+		status, msg = http.StatusUnauthorized, "token expired"
 	case errors.Is(reqErr, pkgerrors.Unauthorized):
 		status, msg = http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)
 	case errors.Is(reqErr, pkgerrors.BadRequest):
