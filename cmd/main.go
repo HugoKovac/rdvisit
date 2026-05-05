@@ -48,15 +48,19 @@ func main() {
 	defer pool.Close()
 	queries := sqlc.New(pool)
 
-	userRepo := user.NewRepository(queries)
-	userService := user.NewService(userRepo)
-	userHandler := user.NewHandler(userService)
-	userHandler.Register(app)
-
 	authRepo := auth.NewRepository(queries)
+	userRepo := user.NewRepository(queries)
+
 	authService := auth.NewService(authRepo, userRepo, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.JWT_SECRET)
+	userService := user.NewService(userRepo)
+
+	authMiddleware := auth.AuthMiddleware(authService)
+
 	authHandler := auth.NewHandler(authService)
+	userHandler := user.NewHandler(userService)
+
 	authHandler.Register(app)
+	userHandler.Register(app, authMiddleware)
 
 	logger.Info("starting API")
 	log.Fatal(app.Listen(":" + env.APP_PORT))

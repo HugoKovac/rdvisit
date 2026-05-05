@@ -1,7 +1,7 @@
 package user
 
 import (
-	"net/http"
+	"project/clean/internal/domain"
 	"project/clean/pkg/errors"
 
 	"github.com/go-playground/validator/v10"
@@ -19,21 +19,14 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc, validate: validate}
 }
 
-func (h *Handler) Register(app *fiber.App) {
-	g := app.Group("/users")
-	g.Post("/", h.Create)
+func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler) {
+	g := app.Group("/users", authMiddleware)
+	g.Get("/me", h.Me)
 }
 
 //==================================
 //				DTO
 //==================================
-
-type RegisterRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name" validate:"required"`
-	Password  string `json:"password" validate:"required,min=12,max=50"`
-}
 
 type UserResponse struct {
 	ID        uuid.UUID `json:"id"`
@@ -46,31 +39,22 @@ type UserResponse struct {
 //				Handler
 //==================================
 
-func (h *Handler) Create(c fiber.Ctx) error {
-	registerRequest := &RegisterRequest{}
-	if err := c.Bind().Body(registerRequest); err != nil {
-		return errors.Wrap(err)
+func (h *Handler) Me(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
+	u, exists := c.Locals("userClaims").(domain.User)
+	if !exists {
+		return errors.Wrap(errors.NotFound)
 	}
 
-	if err := h.validate.Struct(registerRequest); err != nil {
-		return errors.Wrap(err)
-	}
-
-	user, err := h.svc.Register(c, RegisterParams{
-		registerRequest.Email,
-		registerRequest.FirstName,
-		registerRequest.LastName,
-		registerRequest.Password,
-	})
-
+	fullUser, err := h.svc.GetUserByID(ctx, u.ID)
 	if err != nil {
-		return err
+		errors.Wrap(errors.NotFound)
 	}
 
-	return c.Status(http.StatusCreated).JSON(UserResponse{
-		user.ID,
-		user.Email,
-		user.FirstName,
-		user.LastName,
+	return c.JSON(UserResponse{
+		fullUser.ID,
+		fullUser.Email,
+		fullUser.FirstName,
+		fullUser.LastName,
 	})
 }

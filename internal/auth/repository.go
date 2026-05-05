@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"project/clean/db/sqlc"
+	"project/clean/internal/domain"
 	"project/clean/pkg/errors"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 
 type IRepository interface {
 	CreateRefreshToken(ctx context.Context, params CreateRefershToken) error
-	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*RefreshToken, error)
+	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*domain.RefreshToken, error)
 	RevokeRefreshToken(ctx context.Context, id uuid.UUID) error
 	DeleteRefreshToken(ctx context.Context, id uuid.UUID) error
 	// RevokeAllRefreshTokensByUser
@@ -56,12 +57,12 @@ func (r *sqlcRepository) CreateRefreshToken(ctx context.Context, params CreateRe
 	return nil
 }
 
-func (r *sqlcRepository) GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*RefreshToken, error) {
+func (r *sqlcRepository) GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*domain.RefreshToken, error) {
 	refreshToken, err := r.q.GetRefreshTokenByHash(ctx, tokenHash)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	return &RefreshToken{
+	return &domain.RefreshToken{
 		ID:        refreshToken.ID,
 		UserID:    refreshToken.UserID,
 		TokenHash: refreshToken.TokenHash,

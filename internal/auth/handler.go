@@ -1,10 +1,12 @@
 package auth
 
 import (
+	"net/http"
 	"project/clean/pkg/errors"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -19,6 +21,7 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) Register(app *fiber.App) {
 	g := app.Group("/auth")
+	g.Post("/register", h.Create)
 	g.Post("/login", h.Login)
 	g.Post("/refresh", h.Refresh)
 	g.Post("/logout", h.Logout)
@@ -28,10 +31,19 @@ func (h *Handler) Register(app *fiber.App) {
 //				DTO
 //==================================
 
-type AuthHeader struct {
-	Token string `header:"Authorization"`
+type UserResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	FirstName string    `json:"firstname"`
+	LastName  string    `json:"lastname"`
 }
 
+type RegisterRequest struct {
+	Email     string `json:"email" validate:"required,email"`
+	FirstName string `json:"first_name" validate:"required"`
+	LastName  string `json:"last_name" validate:"required"`
+	Password  string `json:"password" validate:"required,min=12,max=50"`
+}
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=12,max=50"`
@@ -48,6 +60,30 @@ type RefreshRequest struct {
 //==================================
 //				Handler
 //==================================
+
+func (h *Handler) Create(c fiber.Ctx) error {
+	registerRequest := &RegisterRequest{}
+	if err := c.Bind().Body(registerRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err := h.validate.Struct(registerRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	user, err := h.svc.Register(c, registerRequest.Email, registerRequest.FirstName, registerRequest.LastName, registerRequest.Password)
+
+	if err != nil {
+		return err
+	}
+
+	return c.Status(http.StatusCreated).JSON(UserResponse{
+		user.ID,
+		user.Email,
+		user.FirstName,
+		user.LastName,
+	})
+}
 
 func (h *Handler) Login(c fiber.Ctx) error {
 	loginRequest := &LoginRequest{}

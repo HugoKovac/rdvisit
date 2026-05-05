@@ -66,6 +66,12 @@ func determineError(reqErr error) (status int, msg any) {
 		status, msg = http.StatusUnprocessableEntity, collErrors
 	case errors.Is(reqErr, pkgerrors.Unauthorized):
 		status, msg = http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized)
+	case errors.Is(reqErr, pkgerrors.BadRequest):
+		status, msg = http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
+	case errors.Is(reqErr, pkgerrors.UnprocessableEntity):
+		status, msg = http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity)
+	case errors.Is(reqErr, pkgerrors.NotFound):
+		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
 	default:
 		status, msg = http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}

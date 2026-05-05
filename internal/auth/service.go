@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"time"
 
+	"project/clean/internal/domain"
 	"project/clean/internal/primitive/roleprimitive"
-	"project/clean/internal/user"
 	"project/clean/pkg/errors"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -24,7 +24,8 @@ type Service struct {
 }
 
 type IUserRepository interface {
-	FindByEmail(ctx context.Context, email string) (*user.User, error)
+	FindByEmail(ctx context.Context, email string) (*domain.User, error)
+	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
 }
 
 func NewService(repo IRepository, userRepo IUserRepository, ttlAccess, ttlRefresh time.Duration, jwtSecret string) *Service {
@@ -41,6 +42,17 @@ type TokenCustomClaims struct {
 	jwt.RegisteredClaims
 	Role roleprimitive.Role `json:"role"`
 	ID   uuid.UUID          `json:"id"`
+}
+
+func (s *Service) Register(ctx context.Context, email, firstname, lastname, password string) (*domain.User, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	//todo: params validation and normalisation
+
+	return s.userRepo.Create(ctx, email, firstname, lastname, string(hash))
 }
 
 func (s *Service) generateToken(userID uuid.UUID) (string, error) {
@@ -159,7 +171,3 @@ func (s *Service) ValidateToken(tokenString string) (*TokenCustomClaims, error) 
 
 	return claims, nil
 }
-
-// ==================================
-//	Params
-// ==================================

@@ -2,9 +2,10 @@ package user
 
 import (
 	"context"
+	"project/clean/internal/domain"
 	"project/clean/pkg/errors"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -15,29 +16,14 @@ func NewService(repo IRepository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Register(ctx context.Context, params RegisterParams) (*User, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcrypt.DefaultCost)
+func (s *Service) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+	u, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	//todo: params validation and normalisation
-
-	return s.repo.Create(ctx, CreateParams{
-		params.Email,
-		params.FirstName,
-		params.LastName,
-		string(hash),
-	})
+	return u, err
 }
 
 // ==================================
 //	Params
 // ==================================
-
-type RegisterParams struct {
-	Email     string
-	FirstName string
-	LastName  string
-	Password  string
-}
