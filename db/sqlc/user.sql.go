@@ -7,8 +7,6 @@ package sqlc
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 const create = `-- name: Create :one
@@ -50,25 +48,6 @@ SELECT id, email, firstname, lastname, password_hash, created_at, updated_at FRO
 
 func (q *Queries) FindByEmail(ctx context.Context, email string) (User, error) {
 	row := q.db.QueryRow(ctx, findByEmail, email)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Email,
-		&i.Firstname,
-		&i.Lastname,
-		&i.PasswordHash,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const findByID = `-- name: FindByID :one
-SELECT id, email, firstname, lastname, password_hash, created_at, updated_at FROM users WHERE id = $1
-`
-
-func (q *Queries) FindByID(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRow(ctx, findByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,

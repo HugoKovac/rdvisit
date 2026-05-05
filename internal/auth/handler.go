@@ -80,8 +80,8 @@ func (h *Handler) Refresh(c fiber.Ctx) error {
 		return errors.Wrap(errors.Unauthorized)
 	}
 
-	if _, err := h.svc.userRepo.FindByID(ctx, claims.ID); err != nil {
-		return errors.Wrap(err)
+	if err := h.svc.RevokeRefreshToken(ctx, token[1]); err != nil {
+		return err
 	}
 
 	accessToken, refreshToken, err := h.svc.GenerateTokenPair(ctx, claims.ID)

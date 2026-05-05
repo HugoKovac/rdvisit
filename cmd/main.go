@@ -53,7 +53,8 @@ func main() {
 	userHandler := user.NewHandler(userService)
 	userHandler.Register(app)
 
-	authService := auth.NewService(userRepo, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.JWT_SECRET)
+	authRepo := auth.NewRepository(queries)
+	authService := auth.NewService(authRepo, userRepo, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.JWT_SECRET)
 	authHandler := auth.NewHandler(authService)
 	authHandler.Register(app)
 
