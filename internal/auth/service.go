@@ -2,8 +2,12 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"math/big"
+	"strings"
 	"time"
 
 	"project/clean/internal/domain"
@@ -16,11 +20,13 @@ import (
 )
 
 type Service struct {
-	repo       IRepository
-	userRepo   IUserRepository
-	ttlAccess  time.Duration
-	ttlRefresh time.Duration
-	jwtSecret  string
+	repo                IRepository
+	userRepo            IUserRepository
+	mailer              IMailer
+	ttlAccess           time.Duration
+	ttlRefresh          time.Duration
+	jwtSecret           string
+	verificationCodeTTL time.Duration
 }
 
 type IUserRepository interface {
@@ -28,13 +34,15 @@ type IUserRepository interface {
 	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
 }
 
-func NewService(repo IRepository, userRepo IUserRepository, ttlAccess, ttlRefresh time.Duration, jwtSecret string) *Service {
+func NewService(repo IRepository, userRepo IUserRepository, mailer IMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
 	return &Service{
-		repo:       repo,
-		userRepo:   userRepo,
-		ttlAccess:  ttlAccess,
-		ttlRefresh: ttlRefresh,
-		jwtSecret:  jwtSecret,
+		repo:                repo,
+		userRepo:            userRepo,
+		mailer:              mailer,
+		ttlAccess:           ttlAccess,
+		ttlRefresh:          ttlRefresh,
+		jwtSecret:           jwtSecret,
+		verificationCodeTTL: verificationCodeTTL,
 	}
 }
 
@@ -42,6 +50,27 @@ type TokenCustomClaims struct {
 	jwt.RegisteredClaims
 	Role roleprimitive.Role `json:"role"`
 	ID   uuid.UUID          `json:"id"`
+}
+
+func generateCode() (string, error) {
+	max := big.NewInt(1_000_000)
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%06d", n.Int64()), nil
+}
+
+func (s *Service) Verify(ctx context.Context, userID uuid.UUID, code string) (bool, error) {
+	vc, err := s.repo.GetVerificationCodeByUser(ctx, userID)
+	if err != nil {
+		return false, err
+	}
+	if strings.Compare(vc.Code, code) != 0 && vc.ExpiresAt.After(time.Now()) {
+		return false, errors.Wrap(errors.Unauthorized)
+	}
+	return true, nil
 }
 
 func (s *Service) Register(ctx context.Context, email, firstname, lastname, password string) (*domain.User, error) {
@@ -52,7 +81,25 @@ func (s *Service) Register(ctx context.Context, email, firstname, lastname, pass
 
 	//todo: params validation and normalisation
 
-	return s.userRepo.Create(ctx, email, firstname, lastname, string(hash))
+	user, err := s.userRepo.Create(ctx, email, firstname, lastname, string(hash))
+	if err != nil {
+		return nil, err
+	}
+
+	code, err := generateCode()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.CreateVerificationCode(ctx, user.ID, code, time.Now().Add(s.verificationCodeTTL)); err != nil {
+		return nil, err
+	}
+
+	if err := s.mailer.SendVerificationCode(ctx, email, firstname, lastname, code); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (s *Service) generateToken(userID uuid.UUID) (string, error) {

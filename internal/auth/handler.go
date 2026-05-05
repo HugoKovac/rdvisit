@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 	"project/clean/pkg/errors"
+	"project/clean/pkg/fiber/fibercontext"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
@@ -19,12 +20,13 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc, validate: validate}
 }
 
-func (h *Handler) Register(app *fiber.App) {
+func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler) {
 	g := app.Group("/auth")
 	g.Post("/register", h.Create)
 	g.Post("/login", h.Login)
 	g.Post("/refresh", h.Refresh)
 	g.Post("/logout", h.Logout)
+	g.Post("/verify", authMiddleware, h.Verify)
 }
 
 //==================================
@@ -55,6 +57,10 @@ type LogoutRequest struct {
 
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+type VerifyRequest struct {
+	Code string `json:"code" validate:"len=6"`
 }
 
 //==================================
@@ -143,5 +149,34 @@ func (h *Handler) Logout(c fiber.Ctx) error {
 	if err := h.svc.DeleteRefreshToken(ctx, body.RefreshToken); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (h *Handler) Verify(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
+
+	u, err := fibercontext.GetUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	verifyRequest := &VerifyRequest{}
+	if err := c.Bind().Body(verifyRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err := h.validate.Struct(verifyRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	verified, err := h.svc.Verify(ctx, u.ID, verifyRequest.Code)
+	if err != nil {
+		return err
+	}
+
+	if !verified {
+		return errors.Wrap(errors.Unauthorized)
+	}
+
 	return nil
 }

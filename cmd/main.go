@@ -15,18 +15,24 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/mailjet/mailjet-apiv3-go/v4"
 )
 
 type Env struct {
-	APP_PORT        string        `envconfig:"APP_PORT" required:"true"`
-	DB_HOST         string        `envconfig:"DB_HOST" required:"true"`
-	DB_PORT         string        `envconfig:"DB_PORT" required:"true"`
-	DB_USER         string        `envconfig:"DB_USER" required:"true"`
-	DB_PASSWORD     string        `envconfig:"DB_PASSWORD" required:"true"`
-	DB_NAME         string        `envconfig:"DB_NAME" required:"true"`
-	JWT_SECRET      string        `envconfig:"JWT_SECRET" required:"true"`
-	JWT_ACCESS_TTL  time.Duration `envconfig:"JWT_ACCESS_TTL" required:"true"`
-	JWT_REFRESH_TTL time.Duration `envconfig:"JWT_REFRESH_TTL" required:"true"`
+	APP_PORT              string        `envconfig:"APP_PORT" required:"true"`
+	DB_HOST               string        `envconfig:"DB_HOST" required:"true"`
+	DB_PORT               string        `envconfig:"DB_PORT" required:"true"`
+	DB_USER               string        `envconfig:"DB_USER" required:"true"`
+	DB_PASSWORD           string        `envconfig:"DB_PASSWORD" required:"true"`
+	DB_NAME               string        `envconfig:"DB_NAME" required:"true"`
+	JWT_SECRET            string        `envconfig:"JWT_SECRET" required:"true"`
+	JWT_ACCESS_TTL        time.Duration `envconfig:"JWT_ACCESS_TTL" required:"true"`
+	JWT_REFRESH_TTL       time.Duration `envconfig:"JWT_REFRESH_TTL" required:"true"`
+	MJ_APIKEY_PUBLIC      string        `envconfig:"MJ_APIKEY_PUBLIC" required:"true"`
+	MJ_APIKEY_PRIVATE     string        `envconfig:"MJ_APIKEY_PRIVATE" required:"true"`
+	MJ_SENDER_EMAIL       string        `envconfig:"MJ_SENDER_EMAIL" required:"true"`
+	MJ_APP_NAME           string        `envconfig:"MJ_APP_NAME" required:"true"`
+	VERIFICATION_CODE_TTL time.Duration `envconfig:"VERIFICATION_CODE_TTL" required:"true"`
 }
 
 func main() {
@@ -48,10 +54,14 @@ func main() {
 	defer pool.Close()
 	queries := sqlc.New(pool)
 
+	client := mailjet.NewMailjetClient(env.MJ_APIKEY_PUBLIC, env.MJ_APIKEY_PRIVATE)
+
+	authMail := auth.NewMailer(client, env.MJ_APP_NAME, env.MJ_SENDER_EMAIL)
+
 	authRepo := auth.NewRepository(queries)
 	userRepo := user.NewRepository(queries)
 
-	authService := auth.NewService(authRepo, userRepo, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.JWT_SECRET)
+	authService := auth.NewService(authRepo, userRepo, authMail, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
 	userService := user.NewService(userRepo)
 
 	authMiddleware := auth.AuthMiddleware(authService)
@@ -59,7 +69,7 @@ func main() {
 	authHandler := auth.NewHandler(authService)
 	userHandler := user.NewHandler(userService)
 
-	authHandler.Register(app)
+	authHandler.Register(app, authMiddleware)
 	userHandler.Register(app, authMiddleware)
 
 	logger.Info("starting API")

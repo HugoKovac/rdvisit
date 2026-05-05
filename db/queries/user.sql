@@ -1,5 +1,5 @@
 -- name: Create :one
-INSERT INTO users (email, firstname, lastname, password_hash, role)
+INSERT INTO users (email, firstname, lastname, password_hash)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
