@@ -2,7 +2,6 @@ package auth
 
 import (
 	"project/clean/pkg/errors"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
@@ -20,8 +19,9 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) Register(app *fiber.App) {
 	g := app.Group("/auth")
-	g.Post("/", h.Login)
+	g.Post("/login", h.Login)
 	g.Post("/refresh", h.Refresh)
+	g.Post("/logout", h.Logout)
 }
 
 //==================================
@@ -35,6 +35,14 @@ type AuthHeader struct {
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=12,max=50"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 //==================================
@@ -65,22 +73,17 @@ func (h *Handler) Login(c fiber.Ctx) error {
 func (h *Handler) Refresh(c fiber.Ctx) error {
 	ctx := c.RequestCtx()
 
-	header := &AuthHeader{}
-	if err := c.Bind().Header(header); err != nil {
+	body := &RefreshRequest{}
+	if err := c.Bind().Body(body); err != nil {
 		return errors.Wrap(errors.Unauthorized)
 	}
 
-	token := strings.Split(header.Token, "Bearer ")
-	if len(token) != 2 {
-		return errors.Wrap(errors.Unauthorized)
-	}
-
-	claims, err := h.svc.ValidateRefreshToken(token[1])
+	claims, err := h.svc.ValidateToken(body.RefreshToken)
 	if err != nil {
 		return errors.Wrap(errors.Unauthorized)
 	}
 
-	if err := h.svc.RevokeRefreshToken(ctx, token[1]); err != nil {
+	if err := h.svc.DeleteRefreshToken(ctx, body.RefreshToken); err != nil {
 		return err
 	}
 
@@ -93,4 +96,16 @@ func (h *Handler) Refresh(c fiber.Ctx) error {
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 	})
+}
+
+func (h *Handler) Logout(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
+	body := &LogoutRequest{}
+	if err := c.Bind().Body(body); err != nil {
+		return err
+	}
+	if err := h.svc.DeleteRefreshToken(ctx, body.RefreshToken); err != nil {
+		return err
+	}
+	return nil
 }

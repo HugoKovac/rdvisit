@@ -13,6 +13,7 @@ type IRepository interface {
 	CreateRefreshToken(ctx context.Context, params CreateRefershToken) error
 	GetRefreshTokenByHash(ctx context.Context, tokenHash string) (*RefreshToken, error)
 	RevokeRefreshToken(ctx context.Context, id uuid.UUID) error
+	DeleteRefreshToken(ctx context.Context, id uuid.UUID) error
 	// RevokeAllRefreshTokensByUser
 }
 
@@ -72,6 +73,13 @@ func (r *sqlcRepository) GetRefreshTokenByHash(ctx context.Context, tokenHash st
 
 func (r *sqlcRepository) RevokeRefreshToken(ctx context.Context, id uuid.UUID) error {
 	if err := r.q.RevokeRefreshToken(ctx, id); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r *sqlcRepository) DeleteRefreshToken(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.DeleteRefreshToken(ctx, id); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil

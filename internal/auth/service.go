@@ -123,22 +123,22 @@ func (s *Service) Login(ctx context.Context, email, password string) (string, st
 	return s.GenerateTokenPair(ctx, user.ID)
 }
 
-func (s *Service) RevokeRefreshToken(ctx context.Context, tokenString string) error {
+func (s *Service) DeleteRefreshToken(ctx context.Context, tokenString string) error {
 	hash := sha256.Sum256([]byte(tokenString))
 	refreshToken, err := s.repo.GetRefreshTokenByHash(ctx, hex.EncodeToString(hash[:]))
 	if err != nil {
-		return errors.Wrap(err)
+		return errors.Wrap(errors.Unauthorized)
 	}
 	if refreshToken.RevokedAt != nil && refreshToken.RevokedAt.Before(time.Now()) {
 		return errors.Wrap(errors.Unauthorized)
 	}
-	if err := s.repo.RevokeRefreshToken(ctx, refreshToken.ID); err != nil {
-		return errors.Wrap(err)
+	if err := s.repo.DeleteRefreshToken(ctx, refreshToken.ID); err != nil {
+		return errors.Wrap(errors.Unauthorized)
 	}
 	return nil
 }
 
-func (s *Service) ValidateRefreshToken(tokenString string) (*TokenCustomClaims, error) {
+func (s *Service) ValidateToken(tokenString string) (*TokenCustomClaims, error) {
 	claims := &TokenCustomClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

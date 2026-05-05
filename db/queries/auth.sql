@@ -19,6 +19,10 @@ SET revoked_at = NOW()
 WHERE id = $1
   AND revoked_at IS NULL;
 
+-- name: DeleteRefreshToken :exec
+DELETE FROM refresh_tokens
+WHERE id = $1;
+
 -- name: RevokeAllRefreshTokensByUser :exec
 UPDATE refresh_tokens
 SET revoked_at = NOW()
