@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"project/clean/internal/primitive/roleprimitive"
 	"time"
+
+	"github.com/HugoKovac/rdvisit/internal/primitive/roleprimitive"
 
 	"github.com/google/uuid"
 )

@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"project/clean/internal/domain"
-	"project/clean/pkg/errors"
 	"strings"
+
+	"github.com/HugoKovac/rdvisit/internal/domain"
+	"github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/gofiber/fiber/v3"
 )

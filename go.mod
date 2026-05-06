@@ -1,4 +1,4 @@
-module project/clean
+module github.com/HugoKovac/rdvisit
 
 go 1.25.4
 

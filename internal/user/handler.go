@@ -1,8 +1,8 @@
 package user
 
 import (
-	"project/clean/pkg/errors"
-	"project/clean/pkg/fiber/fibercontext"
+	"github.com/HugoKovac/rdvisit/pkg/errors"
+	"github.com/HugoKovac/rdvisit/pkg/fiber/fibercontext"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"

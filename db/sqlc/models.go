@@ -10,6 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type Center struct {
+	ID           uuid.UUID  `json:"id"`
+	Name         string     `json:"name"`
+	Street       string     `json:"street"`
+	StreetNumber string     `json:"street_number"`
+	City         string     `json:"city"`
+	PostalCode   string     `json:"postal_code"`
+	Region       string     `json:"region"`
+	Country      string     `json:"country"`
+	CreatedAt    *time.Time `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+}
+
 type RefreshToken struct {
 	ID        uuid.UUID  `json:"id"`
 	UserID    uuid.UUID  `json:"user_id"`

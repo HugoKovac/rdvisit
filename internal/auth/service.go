@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"project/clean/internal/domain"
-	"project/clean/internal/primitive/roleprimitive"
-	"project/clean/pkg/errors"
+	"github.com/HugoKovac/rdvisit/internal/domain"
+	"github.com/HugoKovac/rdvisit/internal/primitive/roleprimitive"
+	"github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

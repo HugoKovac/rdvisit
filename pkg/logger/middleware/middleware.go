@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	pkgerrors "project/clean/pkg/errors"
+
+	pkgerrors "github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"

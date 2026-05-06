@@ -6,11 +6,13 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"project/clean/db/sqlc"
-	"project/clean/internal/auth"
-	"project/clean/internal/user"
-	loggerMiddleware "project/clean/pkg/logger/middleware"
 	"time"
+
+	"github.com/HugoKovac/rdvisit/db/sqlc"
+	"github.com/HugoKovac/rdvisit/internal/auth"
+	"github.com/HugoKovac/rdvisit/internal/center"
+	"github.com/HugoKovac/rdvisit/internal/user"
+	loggerMiddleware "github.com/HugoKovac/rdvisit/pkg/logger/middleware"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -60,17 +62,21 @@ func main() {
 
 	authRepo := auth.NewRepository(queries)
 	userRepo := user.NewRepository(queries)
+	centerRepo := center.NewRepository(queries)
 
 	authService := auth.NewService(authRepo, userRepo, authMail, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
 	userService := user.NewService(userRepo)
+	centerService := center.NewService(centerRepo)
 
 	authMiddleware := auth.AuthMiddleware(authService)
 
 	authHandler := auth.NewHandler(authService)
 	userHandler := user.NewHandler(userService)
+	centerHandler := center.NewHandler(centerService)
 
 	authHandler.Register(app, authMiddleware)
 	userHandler.Register(app, authMiddleware)
+	centerHandler.Register(app, authMiddleware)
 
 	logger.Info("starting API")
 	log.Fatal(app.Listen(":" + env.APP_PORT))

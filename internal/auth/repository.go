@@ -2,10 +2,11 @@ package auth
 
 import (
 	"context"
-	"project/clean/db/sqlc"
-	"project/clean/internal/domain"
-	"project/clean/pkg/errors"
 	"time"
+
+	"github.com/HugoKovac/rdvisit/db/sqlc"
+	"github.com/HugoKovac/rdvisit/internal/domain"
+	"github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/google/uuid"
 )
