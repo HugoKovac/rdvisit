@@ -33,6 +33,9 @@ type IUserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
 	VerifyUserByID(ctx context.Context, id uuid.UUID) error
+
+	CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
+	GetVerificationCodeByUser(ctx context.Context, userID uuid.UUID) (*domain.VerificationCode, error)
 }
 
 func NewService(repo IRepository, userRepo IUserRepository, mailer IMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
@@ -64,7 +67,7 @@ func generateCode() (string, error) {
 }
 
 func (s *Service) Verify(ctx context.Context, userID uuid.UUID, code string) (bool, error) {
-	vc, err := s.repo.GetVerificationCodeByUser(ctx, userID)
+	vc, err := s.userRepo.GetVerificationCodeByUser(ctx, userID)
 	if err != nil {
 		return false, err
 	}
@@ -95,7 +98,7 @@ func (s *Service) Register(ctx context.Context, email, firstname, lastname, pass
 		return nil, err
 	}
 
-	if err := s.repo.CreateVerificationCode(ctx, user.ID, code, time.Now().Add(s.verificationCodeTTL)); err != nil {
+	if err := s.userRepo.CreateVerificationCode(ctx, user.ID, code, time.Now().Add(s.verificationCodeTTL)); err != nil {
 		return nil, err
 	}
 

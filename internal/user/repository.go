@@ -5,6 +5,7 @@ import (
 	"project/clean/db/sqlc"
 	"project/clean/internal/domain"
 	"project/clean/pkg/errors"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -14,6 +15,9 @@ type IRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	VerifyUserByID(ctx context.Context, id uuid.UUID) error
+
+	CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
+	GetVerificationCodeByUser(ctx context.Context, userID uuid.UUID) (*domain.VerificationCode, error)
 }
 
 // ==================================
@@ -97,4 +101,30 @@ func (r *sqlcRepository) VerifyUserByID(ctx context.Context, id uuid.UUID) error
 		return errors.Wrap(err)
 	}
 	return nil
+}
+
+func (r *sqlcRepository) CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error {
+	err := r.q.CreateVerificationCode(ctx, sqlc.CreateVerificationCodeParams{
+		UserID:    userID,
+		Code:      code,
+		ExpiresAt: expiresAt,
+	})
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r *sqlcRepository) GetVerificationCodeByUser(ctx context.Context, userID uuid.UUID) (*domain.VerificationCode, error) {
+	vc, err := r.q.GetVerificationCode(ctx, userID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &domain.VerificationCode{
+		ID:         vc.ID,
+		UserID:     vc.UserID,
+		Code:       vc.Code,
+		ExpiresAt:  vc.ExpiresAt,
+		Created_at: vc.CreatedAt,
+	}, nil
 }
