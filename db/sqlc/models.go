@@ -10,17 +10,26 @@ import (
 	"github.com/google/uuid"
 )
 
+type Appointment struct {
+	ID             uuid.UUID `json:"id"`
+	Date           time.Time `json:"date"`
+	PractitionerID uuid.UUID `json:"practitioner_id"`
+	PatientEmail   string    `json:"patient_email"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
 type Center struct {
-	ID           uuid.UUID  `json:"id"`
-	Name         string     `json:"name"`
-	Street       string     `json:"street"`
-	StreetNumber string     `json:"street_number"`
-	City         string     `json:"city"`
-	PostalCode   string     `json:"postal_code"`
-	Region       string     `json:"region"`
-	Country      string     `json:"country"`
-	CreatedAt    *time.Time `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Street       string    `json:"street"`
+	StreetNumber string    `json:"street_number"`
+	City         string    `json:"city"`
+	PostalCode   string    `json:"postal_code"`
+	Region       string    `json:"region"`
+	Country      string    `json:"country"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type RefreshToken struct {
@@ -28,7 +37,7 @@ type RefreshToken struct {
 	UserID    uuid.UUID  `json:"user_id"`
 	TokenHash string     `json:"token_hash"`
 	ExpiresAt time.Time  `json:"expires_at"`
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt time.Time  `json:"created_at"`
 	RevokedAt *time.Time `json:"revoked_at"`
 }
 
@@ -44,9 +53,9 @@ type User struct {
 }
 
 type VerificationCode struct {
-	ID        uuid.UUID  `json:"id"`
-	UserID    uuid.UUID  `json:"user_id"`
-	Code      string     `json:"code"`
-	ExpiresAt time.Time  `json:"expires_at"`
-	CreatedAt *time.Time `json:"created_at"`
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Code      string    `json:"code"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }

@@ -6,7 +6,7 @@ CREATE TABLE refresh_tokens (
     token_hash TEXT NOT NULL,
 
     expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     revoked_at TIMESTAMPTZ
 );
 

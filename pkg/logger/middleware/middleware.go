@@ -75,9 +75,7 @@ func determineError(reqErr error) (status int, msg any) {
 		status, msg = http.StatusBadRequest, http.StatusText(http.StatusBadRequest)
 	case errors.Is(reqErr, pkgerrors.UnprocessableEntity):
 		status, msg = http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity)
-	case errors.Is(reqErr, pkgerrors.NotFound):
-		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
-	case errors.Is(reqErr, sql.ErrNoRows):
+	case errors.Is(reqErr, pkgerrors.NotFound), errors.Is(reqErr, sql.ErrNoRows):
 		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
 	default:
 		status, msg = http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)

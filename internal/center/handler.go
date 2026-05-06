@@ -28,14 +28,14 @@ func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler, centerM
 //==================================
 
 type CentersResponse struct {
-	ID           uuid.UUID
-	Name         string
-	Street       string
-	StreetNumber string
-	City         string
-	PostalCode   string
-	Region       string
-	Country      string
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Street       string    `json:"street"`
+	StreetNumber string    `json:"street_number"`
+	City         string    `json:"city"`
+	PostalCode   string    `json:"postal_code"`
+	Region       string    `json:"region"`
+	Country      string    `json:"country"`
 }
 
 //==================================

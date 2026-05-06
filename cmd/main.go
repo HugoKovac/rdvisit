@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/HugoKovac/rdvisit/db/sqlc"
+	"github.com/HugoKovac/rdvisit/internal/appointment"
 	"github.com/HugoKovac/rdvisit/internal/auth"
 	"github.com/HugoKovac/rdvisit/internal/center"
 	"github.com/HugoKovac/rdvisit/internal/user"
@@ -63,10 +64,12 @@ func main() {
 	authRepo := auth.NewRepository(queries)
 	userRepo := user.NewRepository(queries)
 	centerRepo := center.NewRepository(queries)
+	appointmentRepo := appointment.NewRepository(queries)
 
 	authService := auth.NewService(authRepo, userRepo, authMail, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
 	userService := user.NewService(userRepo)
 	centerService := center.NewService(centerRepo)
+	appointmentService := appointment.NewService(appointmentRepo)
 
 	authMiddleware := auth.AuthMiddleware(authService)
 	centerMiddleware := center.CheckNGetCenter(centerService)
@@ -74,10 +77,12 @@ func main() {
 	authHandler := auth.NewHandler(authService)
 	userHandler := user.NewHandler(userService)
 	centerHandler := center.NewHandler(centerService)
+	appointmentHandler := appointment.NewHandler(appointmentService)
 
 	authHandler.Register(app, authMiddleware)
 	userHandler.Register(app, authMiddleware)
 	centerHandler.Register(app, authMiddleware, centerMiddleware)
+	appointmentHandler.Register(app, authMiddleware)
 
 	logger.Info("starting API")
 	log.Fatal(app.Listen(":" + env.APP_PORT))

@@ -9,6 +9,6 @@ CREATE TABLE centers (
     region              TEXT NOT NULL,
     country             TEXT NOT NULL,
 
-    created_at          TIMESTAMPTZ DEFAULT NOW(),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

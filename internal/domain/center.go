@@ -15,6 +15,6 @@ type Center struct {
 	PostalCode   string
 	Region       string
 	Country      string
-	CreatedAt    *time.Time
+	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

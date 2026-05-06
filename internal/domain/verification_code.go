@@ -11,5 +11,5 @@ type VerificationCode struct {
 	UserID     uuid.UUID
 	Code       string
 	ExpiresAt  time.Time
-	Created_at *time.Time
+	Created_at time.Time
 }
