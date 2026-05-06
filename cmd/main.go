@@ -69,6 +69,7 @@ func main() {
 	centerService := center.NewService(centerRepo)
 
 	authMiddleware := auth.AuthMiddleware(authService)
+	centerMiddleware := center.CheckNGetCenter(centerService)
 
 	authHandler := auth.NewHandler(authService)
 	userHandler := user.NewHandler(userService)
@@ -76,7 +77,7 @@ func main() {
 
 	authHandler.Register(app, authMiddleware)
 	userHandler.Register(app, authMiddleware)
-	centerHandler.Register(app, authMiddleware)
+	centerHandler.Register(app, authMiddleware, centerMiddleware)
 
 	logger.Info("starting API")
 	log.Fatal(app.Listen(":" + env.APP_PORT))

@@ -5,6 +5,7 @@ import (
 
 	"github.com/HugoKovac/rdvisit/internal/domain"
 	"github.com/HugoKovac/rdvisit/pkg/errors"
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -20,7 +21,15 @@ func (s *Service) GetCenters(ctx context.Context) ([]*domain.Center, error) {
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	return centers, err
+	return centers, nil
+}
+
+func (s *Service) GetCenterByID(ctx context.Context, id uuid.UUID) (*domain.Center, error) {
+	center, err := s.repo.GetCenterByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return center, nil
 }
 
 // ==================================

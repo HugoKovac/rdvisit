@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -75,6 +76,8 @@ func determineError(reqErr error) (status int, msg any) {
 	case errors.Is(reqErr, pkgerrors.UnprocessableEntity):
 		status, msg = http.StatusUnprocessableEntity, http.StatusText(http.StatusUnprocessableEntity)
 	case errors.Is(reqErr, pkgerrors.NotFound):
+		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
+	case errors.Is(reqErr, sql.ErrNoRows):
 		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
 	default:
 		status, msg = http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)

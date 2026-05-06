@@ -6,10 +6,12 @@ import (
 	"github.com/HugoKovac/rdvisit/db/sqlc"
 	"github.com/HugoKovac/rdvisit/internal/domain"
 	"github.com/HugoKovac/rdvisit/pkg/errors"
+	"github.com/google/uuid"
 )
 
 type IRepository interface {
 	GetCenters(ctx context.Context) ([]*domain.Center, error)
+	GetCenterByID(ctx context.Context, id uuid.UUID) (*domain.Center, error)
 }
 
 // ==================================
@@ -58,4 +60,23 @@ func (r *sqlcRepository) GetCenters(ctx context.Context) ([]*domain.Center, erro
 	}
 
 	return rtn, nil
+}
+
+func (r *sqlcRepository) GetCenterByID(ctx context.Context, id uuid.UUID) (*domain.Center, error) {
+	center, err := r.q.GetCenterByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &domain.Center{
+		ID:           center.ID,
+		Name:         center.Name,
+		Street:       center.Street,
+		StreetNumber: center.StreetNumber,
+		City:         center.City,
+		PostalCode:   center.PostalCode,
+		Region:       center.Region,
+		Country:      center.Country,
+		CreatedAt:    center.CreatedAt,
+		UpdatedAt:    center.UpdatedAt,
+	}, nil
 }

@@ -7,6 +7,8 @@ package sqlc
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getAllCenters = `-- name: GetAllCenters :many
@@ -42,4 +44,27 @@ func (q *Queries) GetAllCenters(ctx context.Context) ([]Center, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getCenterByID = `-- name: GetCenterByID :one
+SELECT id, name, street, street_number, city, postal_code, region, country, created_at, updated_at FROM centers
+WHERE id = $1
+`
+
+func (q *Queries) GetCenterByID(ctx context.Context, id uuid.UUID) (Center, error) {
+	row := q.db.QueryRow(ctx, getCenterByID, id)
+	var i Center
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Street,
+		&i.StreetNumber,
+		&i.City,
+		&i.PostalCode,
+		&i.Region,
+		&i.Country,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
