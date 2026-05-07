@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/HugoKovac/rdvisit/internal/user"
 	"github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/go-playground/validator/v10"
@@ -12,12 +13,17 @@ import (
 
 type Handler struct {
 	svc      *Service
+	userSvc  *user.Service
 	validate *validator.Validate
 }
 
-func NewHandler(svc *Service) *Handler {
+func NewHandler(svc *Service, userSvc *user.Service) *Handler {
 	validate := validator.New()
-	return &Handler{svc: svc, validate: validate}
+	return &Handler{
+		svc:      svc,
+		userSvc:  userSvc,
+		validate: validate,
+	}
 }
 
 func (h *Handler) Register(app *fiber.App) {
@@ -64,6 +70,7 @@ type RefreshRequest struct {
 //==================================
 
 func (h *Handler) Create(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
 	registerRequest := &RegisterRequest{}
 	if err := c.Bind().Body(registerRequest); err != nil {
 		return errors.Wrap(err)
@@ -73,9 +80,17 @@ func (h *Handler) Create(c fiber.Ctx) error {
 		return errors.Wrap(err)
 	}
 
-	user, err := h.svc.Register(c, registerRequest.Email, registerRequest.FirstName, registerRequest.LastName, registerRequest.Password)
-
+	user, err := h.svc.Register(ctx, registerRequest.Email, registerRequest.FirstName, registerRequest.LastName, registerRequest.Password)
 	if err != nil {
+		return err
+	}
+
+	code, err := h.userSvc.CreateVerificationCode(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := h.userSvc.SendVerificationCode(ctx, registerRequest.Email, registerRequest.FirstName, registerRequest.LastName, code); err != nil {
 		return err
 	}
 

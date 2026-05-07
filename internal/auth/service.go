@@ -2,11 +2,8 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/HugoKovac/rdvisit/internal/domain"
@@ -19,36 +16,25 @@ import (
 )
 
 type Service struct {
-	repo                IRepository
-	userRepo            IUserRepository
-	userMailer          IUserMailer
-	ttlAccess           time.Duration
-	ttlRefresh          time.Duration
-	jwtSecret           string
-	verificationCodeTTL time.Duration
+	repo       IRepository
+	userRepo   IUserRepository
+	ttlAccess  time.Duration
+	ttlRefresh time.Duration
+	jwtSecret  string
 }
 
 type IUserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	Create(ctx context.Context, email, firstname, lastname, passwordHash string) (*domain.User, error)
-	VerifyUserByID(ctx context.Context, id uuid.UUID) error
-
-	CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
 }
 
-type IUserMailer interface {
-	SendVerificationCode(ctx context.Context, emailTo, firstname, lastname, code string) error
-}
-
-func NewService(repo IRepository, userRepo IUserRepository, userMailer IUserMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
+func NewService(repo IRepository, userRepo IUserRepository, ttlAccess, ttlRefresh time.Duration, jwtSecret string) *Service {
 	return &Service{
-		repo:                repo,
-		userRepo:            userRepo,
-		userMailer:          userMailer,
-		ttlAccess:           ttlAccess,
-		ttlRefresh:          ttlRefresh,
-		jwtSecret:           jwtSecret,
-		verificationCodeTTL: verificationCodeTTL,
+		repo:       repo,
+		userRepo:   userRepo,
+		ttlAccess:  ttlAccess,
+		ttlRefresh: ttlRefresh,
+		jwtSecret:  jwtSecret,
 	}
 }
 
@@ -56,16 +42,6 @@ type TokenCustomClaims struct {
 	jwt.RegisteredClaims
 	Role roleprimitive.Role `json:"role"`
 	ID   uuid.UUID          `json:"id"`
-}
-
-func generateCode() (string, error) {
-	max := big.NewInt(1_000_000)
-	n, err := rand.Int(rand.Reader, max)
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
 func (s *Service) Register(ctx context.Context, email, firstname, lastname, password string) (*domain.User, error) {
@@ -78,19 +54,6 @@ func (s *Service) Register(ctx context.Context, email, firstname, lastname, pass
 
 	user, err := s.userRepo.Create(ctx, email, firstname, lastname, string(hash))
 	if err != nil {
-		return nil, err
-	}
-
-	code, err := generateCode()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := s.userRepo.CreateVerificationCode(ctx, user.ID, code, time.Now().Add(s.verificationCodeTTL)); err != nil {
-		return nil, err
-	}
-
-	if err := s.userMailer.SendVerificationCode(ctx, email, firstname, lastname, code); err != nil {
 		return nil, err
 	}
 

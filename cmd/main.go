@@ -66,8 +66,8 @@ func main() {
 	centerRepo := center.NewRepository(queries)
 	appointmentRepo := appointment.NewRepository(queries)
 
-	authService := auth.NewService(authRepo, userRepo, userMailer, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
-	userService := user.NewService(userRepo, userMailer)
+	authService := auth.NewService(authRepo, userRepo, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.JWT_SECRET)
+	userService := user.NewService(userRepo, userMailer, env.VERIFICATION_CODE_TTL)
 	centerService := center.NewService(centerRepo)
 	appointmentService := appointment.NewService(appointmentRepo)
 
@@ -75,7 +75,7 @@ func main() {
 	centerMiddleware := center.CheckNGetCenter(centerService)
 	verifiedMiddleware := user.CheckUserVerified(userService)
 
-	authHandler := auth.NewHandler(authService)
+	authHandler := auth.NewHandler(authService, userService)
 	userHandler := user.NewHandler(userService)
 	centerHandler := center.NewHandler(centerService)
 	appointmentHandler := appointment.NewHandler(appointmentService)
