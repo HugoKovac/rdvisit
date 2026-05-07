@@ -29,6 +29,16 @@ func (q *Queries) CreateVerificationCode(ctx context.Context, arg CreateVerifica
 	return err
 }
 
+const deleteVerificationCode = `-- name: DeleteVerificationCode :exec
+DELETE FROM verification_codes
+WHERE id = $1
+`
+
+func (q *Queries) DeleteVerificationCode(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteVerificationCode, id)
+	return err
+}
+
 const getVerificationCode = `-- name: GetVerificationCode :one
 SELECT id, user_id, code, expires_at, created_at FROM verification_codes
 WHERE user_id = $1

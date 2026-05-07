@@ -73,6 +73,10 @@ func (s *Service) CreateVerificationCode(ctx context.Context, userID uuid.UUID) 
 	return code, nil
 }
 
+func (s *Service) DeleteVerificationCode(ctx context.Context, vcID uuid.UUID) error {
+	return s.repo.DeleteVerificationCode(ctx, vcID)
+}
+
 func (s *Service) SendVerificationCode(ctx context.Context, email, firstname, lastname, code string) error {
 	return s.mailer.SendVerificationCode(ctx, email, firstname, lastname, code)
 }

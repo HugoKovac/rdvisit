@@ -1,6 +1,8 @@
 package user
 
 import (
+	"time"
+
 	"github.com/HugoKovac/rdvisit/pkg/errors"
 	"github.com/HugoKovac/rdvisit/pkg/fiber/fibercontext"
 
@@ -23,6 +25,7 @@ func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler) {
 	g := app.Group("/users", authMiddleware)
 	g.Get("/me", h.Me)
 	g.Post("/verify", authMiddleware, h.Verify)
+	g.Post("/resend-code", authMiddleware, h.Resend)
 }
 
 //==================================
@@ -88,6 +91,48 @@ func (h *Handler) Verify(c fiber.Ctx) error {
 
 	if !verified {
 		return errors.Wrap(errors.Unauthorized)
+	}
+
+	return nil
+}
+
+func (h *Handler) Resend(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
+
+	u, err := fibercontext.GetUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	user, err := h.svc.GetUserByID(ctx, u.ID)
+	if err != nil {
+		return err
+	}
+
+	if user.Verified {
+		return c.SendString("Already verified")
+	}
+
+	vc, err := h.svc.repo.GetVerificationCodeByUser(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if vc.ExpiresAt.After(time.Now()) {
+		return errors.Wrap(errors.TooEarly)
+	}
+
+	if err := h.svc.DeleteVerificationCode(ctx, vc.ID); err != nil {
+		return err
+	}
+
+	newCode, err := h.svc.CreateVerificationCode(ctx, user.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := h.svc.SendVerificationCode(ctx, user.Email, user.FirstName, user.LastName, newCode); err != nil {
+		return err
 	}
 
 	return nil

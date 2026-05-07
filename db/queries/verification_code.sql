@@ -6,3 +6,7 @@ RETURNING *;
 -- name: GetVerificationCode :one
 SELECT * FROM verification_codes
 WHERE user_id = $1;
+
+-- name: DeleteVerificationCode :exec
+DELETE FROM verification_codes
+WHERE id = $1;

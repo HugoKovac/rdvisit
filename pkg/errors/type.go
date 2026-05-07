@@ -8,4 +8,5 @@ var (
 	UnprocessableEntity = errors.New("Unprocessable Content")
 	NotFound            = errors.New("Not Found")
 	Forbidden           = errors.New("Forbidden")
+	TooEarly           = errors.New("Too Early")
 )

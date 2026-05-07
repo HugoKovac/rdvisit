@@ -79,6 +79,8 @@ func determineError(reqErr error) (status int, msg any) {
 		status, msg = http.StatusNotFound, http.StatusText(http.StatusNotFound)
 	case errors.Is(reqErr, pkgerrors.Forbidden), errors.Is(reqErr, sql.ErrNoRows):
 		status, msg = http.StatusForbidden, http.StatusText(http.StatusForbidden)
+	case errors.Is(reqErr, pkgerrors.TooEarly):
+		status, msg = http.StatusTooEarly, http.StatusText(http.StatusTooEarly)
 	default:
 		status, msg = http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)
 	}

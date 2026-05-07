@@ -18,6 +18,7 @@ type IRepository interface {
 	VerifyUserByID(ctx context.Context, id uuid.UUID) error
 
 	CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
+	DeleteVerificationCode(ctx context.Context, vcID uuid.UUID) error
 	GetVerificationCodeByUser(ctx context.Context, userID uuid.UUID) (*domain.VerificationCode, error)
 }
 
@@ -114,6 +115,13 @@ func (r *sqlcRepository) CreateVerificationCode(ctx context.Context, userID uuid
 		ExpiresAt: expiresAt,
 	})
 	if err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (r *sqlcRepository) DeleteVerificationCode(ctx context.Context, vcID uuid.UUID) error {
+	if err := r.q.DeleteVerificationCode(ctx, vcID); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil

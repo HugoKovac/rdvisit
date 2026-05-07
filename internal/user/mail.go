@@ -34,7 +34,7 @@ func (m *userMailer) SendVerificationCode(ctx context.Context, emailTo, firstnam
 			},
 			Subject:  m.appName + " verification code",
 			TextPart: "Failed to load html.",
-			HTMLPart: fmt.Sprintf("<h3>Here is your verification code</h3><p>%s</p>", code),
+			HTMLPart: fmt.Sprintf("<h2>Welcome %s %s</h2><h3>Here is your verification code</h3><p>%s</p>", firstname, lastname, code),
 		},
 	}
 
