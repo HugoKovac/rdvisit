@@ -1,4 +1,4 @@
-package auth
+package user
 
 import (
 	"context"
@@ -39,10 +39,9 @@ func (m *userMailer) SendVerificationCode(ctx context.Context, emailTo, firstnam
 	}
 
 	messages := mailjet.MessagesV31{Info: msgs}
-	res, err := m.client.SendMailV31(&messages)
+	_, err := m.client.SendMailV31(&messages)
 	if err != nil {
 		return err
 	}
-	fmt.Println(res)
 	return nil
 }

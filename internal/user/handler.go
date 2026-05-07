@@ -22,11 +22,16 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler) {
 	g := app.Group("/users", authMiddleware)
 	g.Get("/me", h.Me)
+	g.Post("/verify", authMiddleware, h.Verify)
 }
 
 //==================================
 //				DTO
 //==================================
+
+type VerifyRequest struct {
+	Code string `json:"code" validate:"len=6"`
+}
 
 type UserResponse struct {
 	ID        uuid.UUID `json:"id"`
@@ -57,4 +62,33 @@ func (h *Handler) Me(c fiber.Ctx) error {
 		fullUser.FirstName,
 		fullUser.LastName,
 	})
+}
+
+func (h *Handler) Verify(c fiber.Ctx) error {
+	ctx := c.RequestCtx()
+
+	u, err := fibercontext.GetUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	verifyRequest := &VerifyRequest{}
+	if err := c.Bind().Body(verifyRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err := h.validate.Struct(verifyRequest); err != nil {
+		return errors.Wrap(err)
+	}
+
+	verified, err := h.svc.Verify(ctx, u.ID, verifyRequest.Code)
+	if err != nil {
+		return err
+	}
+
+	if !verified {
+		return errors.Wrap(errors.Unauthorized)
+	}
+
+	return nil
 }

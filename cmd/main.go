@@ -59,30 +59,31 @@ func main() {
 
 	client := mailjet.NewMailjetClient(env.MJ_APIKEY_PUBLIC, env.MJ_APIKEY_PRIVATE)
 
-	authMail := auth.NewMailer(client, env.MJ_APP_NAME, env.MJ_SENDER_EMAIL)
+	userMailer := user.NewMailer(client, env.MJ_APP_NAME, env.MJ_SENDER_EMAIL)
 
 	authRepo := auth.NewRepository(queries)
 	userRepo := user.NewRepository(queries)
 	centerRepo := center.NewRepository(queries)
 	appointmentRepo := appointment.NewRepository(queries)
 
-	authService := auth.NewService(authRepo, userRepo, authMail, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
-	userService := user.NewService(userRepo)
+	authService := auth.NewService(authRepo, userRepo, userMailer, env.JWT_ACCESS_TTL, env.JWT_REFRESH_TTL, env.VERIFICATION_CODE_TTL, env.JWT_SECRET)
+	userService := user.NewService(userRepo, userMailer)
 	centerService := center.NewService(centerRepo)
 	appointmentService := appointment.NewService(appointmentRepo)
 
 	authMiddleware := auth.AuthMiddleware(authService)
 	centerMiddleware := center.CheckNGetCenter(centerService)
+	verifiedMiddleware := user.CheckUserVerified(userService)
 
 	authHandler := auth.NewHandler(authService)
 	userHandler := user.NewHandler(userService)
 	centerHandler := center.NewHandler(centerService)
 	appointmentHandler := appointment.NewHandler(appointmentService)
 
-	authHandler.Register(app, authMiddleware)
+	authHandler.Register(app)
 	userHandler.Register(app, authMiddleware)
 	centerHandler.Register(app, authMiddleware, centerMiddleware)
-	appointmentHandler.Register(app, authMiddleware)
+	appointmentHandler.Register(app, authMiddleware, verifiedMiddleware)
 
 	logger.Info("starting API")
 	log.Fatal(app.Listen(":" + env.APP_PORT))

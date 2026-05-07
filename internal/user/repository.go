@@ -62,6 +62,7 @@ func (r *sqlcRepository) Create(ctx context.Context, email, firstname, lastname,
 		PasswordHash: user.PasswordHash,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
+		Verified:     user.Verified,
 	}, nil
 }
 
@@ -78,6 +79,7 @@ func (r *sqlcRepository) FindByEmail(ctx context.Context, email string) (*domain
 		PasswordHash: user.PasswordHash,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
+		Verified:     user.Verified,
 	}, nil
 }
 
@@ -94,6 +96,7 @@ func (r *sqlcRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Us
 		PasswordHash: user.PasswordHash,
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
+		Verified:     user.Verified,
 	}, nil
 }
 

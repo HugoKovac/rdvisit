@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/HugoKovac/rdvisit/internal/domain"
@@ -22,7 +21,7 @@ import (
 type Service struct {
 	repo                IRepository
 	userRepo            IUserRepository
-	mailer              IMailer
+	userMailer          IUserMailer
 	ttlAccess           time.Duration
 	ttlRefresh          time.Duration
 	jwtSecret           string
@@ -35,14 +34,17 @@ type IUserRepository interface {
 	VerifyUserByID(ctx context.Context, id uuid.UUID) error
 
 	CreateVerificationCode(ctx context.Context, userID uuid.UUID, code string, expiresAt time.Time) error
-	GetVerificationCodeByUser(ctx context.Context, userID uuid.UUID) (*domain.VerificationCode, error)
 }
 
-func NewService(repo IRepository, userRepo IUserRepository, mailer IMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
+type IUserMailer interface {
+	SendVerificationCode(ctx context.Context, emailTo, firstname, lastname, code string) error
+}
+
+func NewService(repo IRepository, userRepo IUserRepository, userMailer IUserMailer, ttlAccess, ttlRefresh, verificationCodeTTL time.Duration, jwtSecret string) *Service {
 	return &Service{
 		repo:                repo,
 		userRepo:            userRepo,
-		mailer:              mailer,
+		userMailer:          userMailer,
 		ttlAccess:           ttlAccess,
 		ttlRefresh:          ttlRefresh,
 		jwtSecret:           jwtSecret,
@@ -64,20 +66,6 @@ func generateCode() (string, error) {
 	}
 
 	return fmt.Sprintf("%06d", n.Int64()), nil
-}
-
-func (s *Service) Verify(ctx context.Context, userID uuid.UUID, code string) (bool, error) {
-	vc, err := s.userRepo.GetVerificationCodeByUser(ctx, userID)
-	if err != nil {
-		return false, err
-	}
-	if strings.Compare(vc.Code, code) != 0 && vc.ExpiresAt.After(time.Now()) {
-		return false, errors.Wrap(errors.Unauthorized)
-	}
-	if err := s.userRepo.VerifyUserByID(ctx, userID); err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func (s *Service) Register(ctx context.Context, email, firstname, lastname, password string) (*domain.User, error) {
@@ -102,7 +90,7 @@ func (s *Service) Register(ctx context.Context, email, firstname, lastname, pass
 		return nil, err
 	}
 
-	if err := s.mailer.SendVerificationCode(ctx, email, firstname, lastname, code); err != nil {
+	if err := s.userMailer.SendVerificationCode(ctx, email, firstname, lastname, code); err != nil {
 		return nil, err
 	}
 

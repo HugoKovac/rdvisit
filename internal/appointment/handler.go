@@ -19,9 +19,9 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc, validate: validate}
 }
 
-func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler) {
+func (h *Handler) Register(app *fiber.App, authMiddleware fiber.Handler, verifiedMiddleware fiber.Handler) {
 	g := app.Group("/appointments", authMiddleware)
-	g.Post("/", h.CreateAppointment)
+	g.Post("/", verifiedMiddleware, h.CreateAppointment)
 }
 
 //==================================

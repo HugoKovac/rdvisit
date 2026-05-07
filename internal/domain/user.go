@@ -17,4 +17,5 @@ type User struct {
 	Role         roleprimitive.Role
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+	Verified     bool
 }
