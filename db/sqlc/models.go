@@ -14,7 +14,7 @@ type Appointment struct {
 	ID             uuid.UUID `json:"id"`
 	Date           time.Time `json:"date"`
 	PractitionerID uuid.UUID `json:"practitioner_id"`
-	PatientEmail   string    `json:"patient_email"`
+	PatientID      uuid.UUID `json:"patient_id"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 }
@@ -47,6 +47,7 @@ type User struct {
 	Firstname    string    `json:"firstname"`
 	Lastname     string    `json:"lastname"`
 	PasswordHash string    `json:"password_hash"`
+	Role         string    `json:"role"`
 	Verified     bool      `json:"verified"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`

@@ -4,7 +4,7 @@ CREATE TABLE appointments (
     date                TIMESTAMPTZ NOT NULL,
 
     practitioner_id     UUID NOT NULL REFERENCES users(id),
-    patient_email       TEXT NOT NULL,
+    patient_id          UUID NOT NULL REFERENCES users(id),
 
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
