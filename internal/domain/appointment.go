@@ -10,6 +10,7 @@ type Appointment struct {
 	ID             uuid.UUID
 	Date           time.Time
 	PractitionerID uuid.UUID
+	PatientID      uuid.UUID
 	PatientEmail   string
 	CreatedAt      time.Time
 	UpdatedAt      time.Time

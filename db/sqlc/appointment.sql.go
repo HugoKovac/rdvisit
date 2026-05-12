@@ -13,9 +13,18 @@ import (
 )
 
 const createAppointment = `-- name: CreateAppointment :one
-INSERT INTO appointments (date, practitioner_id, patient_email)
-VALUES ($1, $2, $3)
-RETURNING id, date, practitioner_id, patient_email, created_at, updated_at
+WITH patient AS (
+    INSERT INTO users (email, firstname, lastname, password_hash, role, verified)
+    VALUES ($3, '', '', '', 'patient', false)
+    ON CONFLICT (email) DO UPDATE
+    SET email = EXCLUDED.email
+    RETURNING id, email, role
+)
+INSERT INTO appointments (date, practitioner_id, patient_id)
+SELECT $1, $2, patient.id
+FROM patient
+WHERE patient.role = 'patient'
+RETURNING id, date, practitioner_id, patient_id, created_at, updated_at
 `
 
 type CreateAppointmentParams struct {
@@ -31,7 +40,7 @@ func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentPa
 		&i.ID,
 		&i.Date,
 		&i.PractitionerID,
-		&i.PatientEmail,
+		&i.PatientID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

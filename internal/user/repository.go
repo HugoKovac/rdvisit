@@ -6,6 +6,7 @@ import (
 
 	"github.com/HugoKovac/rdvisit/db/sqlc"
 	"github.com/HugoKovac/rdvisit/internal/domain"
+	"github.com/HugoKovac/rdvisit/internal/primitive/roleprimitive"
 	"github.com/HugoKovac/rdvisit/pkg/errors"
 
 	"github.com/google/uuid"
@@ -61,6 +62,7 @@ func (r *sqlcRepository) Create(ctx context.Context, email, firstname, lastname,
 		LastName:     user.Lastname,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
+		Role:         roleprimitive.Role(user.Role),
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 		Verified:     user.Verified,
@@ -78,6 +80,7 @@ func (r *sqlcRepository) FindByEmail(ctx context.Context, email string) (*domain
 		LastName:     user.Lastname,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
+		Role:         roleprimitive.Role(user.Role),
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 		Verified:     user.Verified,
@@ -95,6 +98,7 @@ func (r *sqlcRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Us
 		LastName:     user.Lastname,
 		Email:        user.Email,
 		PasswordHash: user.PasswordHash,
+		Role:         roleprimitive.Role(user.Role),
 		CreatedAt:    user.CreatedAt,
 		UpdatedAt:    user.UpdatedAt,
 		Verified:     user.Verified,

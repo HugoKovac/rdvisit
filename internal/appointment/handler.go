@@ -38,7 +38,8 @@ type CreateAppointmentResponse struct {
 	ID             uuid.UUID `json:"id"`
 	Date           time.Time `json:"date"`
 	PractitionerID uuid.UUID `json:"practitioner_id"`
-	PatientEmail   string    `json:"patient_email" `
+	PatientID      uuid.UUID `json:"patient_id"`
+	PatientEmail   string    `json:"patient_email"`
 }
 
 //==================================
@@ -70,6 +71,7 @@ func (h *Handler) CreateAppointment(c fiber.Ctx) error {
 		ID:             appointment.ID,
 		Date:           appointment.Date,
 		PractitionerID: appointment.PractitionerID,
+		PatientID:      appointment.PatientID,
 		PatientEmail:   appointment.PatientEmail,
 	})
 }

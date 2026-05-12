@@ -3,5 +3,6 @@ package roleprimitive
 type Role string
 
 const (
-	Common = "common"
+	Common  Role = "common"
+	Patient Role = "patient"
 )
