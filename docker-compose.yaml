@@ -1,14 +1,64 @@
 services:
-  postgres:
-    image: postgres:16
+  app:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      APP_PORT: ${APP_PORT:-3000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:?set DB_USER in Dokploy environment variables}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in Dokploy environment variables}
+      DB_NAME: ${DB_NAME:?set DB_NAME in Dokploy environment variables}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in Dokploy environment variables}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-15m}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-720h}
+      MJ_APIKEY_PUBLIC: ${MJ_APIKEY_PUBLIC:?set MJ_APIKEY_PUBLIC in Dokploy environment variables}
+      MJ_APIKEY_PRIVATE: ${MJ_APIKEY_PRIVATE:?set MJ_APIKEY_PRIVATE in Dokploy environment variables}
+      MJ_SENDER_EMAIL: ${MJ_SENDER_EMAIL:?set MJ_SENDER_EMAIL in Dokploy environment variables}
+      MJ_APP_NAME: ${MJ_APP_NAME:-RDVisit}
+      VERIFICATION_CODE_TTL: ${VERIFICATION_CODE_TTL:-15m}
     ports:
-      - "${DB_PORT}:5432"
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
+
+  migrate:
+    build:
+      context: .
+      target: migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - -path
+      - /migrations
+      - -database
+      - postgres://${DB_USER:?set DB_USER in Dokploy environment variables}:${DB_PASSWORD:?set DB_PASSWORD in Dokploy environment variables}@postgres:5432/${DB_NAME:?set DB_NAME in Dokploy environment variables}?sslmode=disable
+      - up
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?set DB_USER in Dokploy environment variables}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in Dokploy environment variables}
+      POSTGRES_DB: ${DB_NAME:?set DB_NAME in Dokploy environment variables}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  pgdata:
+  postgres_data:
