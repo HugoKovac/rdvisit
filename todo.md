@@ -1,0 +1,6 @@
+- [ ] When creating appointment, link it to a user with role "patient". If don't exist create it as not verified
+- [ ] Create slots for practionners. Take ranges of time per days. Can't book appointment if not slot as patient
+- [ ] Cancel appointment max 8 hours before for practionner or patient
+- [ ] Send appointment summary to practitionner and patient
+- [ ] return all appointment for patient
+- [ ] return all appointment for practionner
