@@ -8,6 +8,7 @@ RUN go mod download
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/rdvisit ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/rdvisit-migrate ./cmd/migrate
 
 FROM alpine:3.22 AS app
 RUN addgroup -S rdvisit && adduser -S rdvisit -G rdvisit
@@ -19,4 +20,5 @@ CMD ["/app/rdvisit"]
 
 FROM migrate/migrate:v4.18.3 AS migrate
 COPY db/migrations /migrations
-ENTRYPOINT ["migrate"]
+COPY --from=builder /out/rdvisit-migrate /usr/local/bin/rdvisit-migrate
+ENTRYPOINT ["rdvisit-migrate"]

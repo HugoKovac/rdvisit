@@ -35,12 +35,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command:
-      - -path
-      - /migrations
-      - -database
-      - postgres://${DB_USER:?set DB_USER in Dokploy environment variables}:${DB_PASSWORD:?set DB_PASSWORD in Dokploy environment variables}@postgres:5432/${DB_NAME:?set DB_NAME in Dokploy environment variables}?sslmode=disable
-      - up
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:?set DB_USER in Dokploy environment variables}
+      DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in Dokploy environment variables}
+      DB_NAME: ${DB_NAME:?set DB_NAME in Dokploy environment variables}
 
   postgres:
     image: postgres:16-alpine

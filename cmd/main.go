@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
+	"net"
+	"net/url"
 	"os"
 	"time"
 
@@ -49,7 +50,15 @@ func main() {
 		return
 	}
 
-	pool, err := pgxpool.New(context.Background(), fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", env.DB_USER, env.DB_PASSWORD, env.DB_HOST, env.DB_PORT, env.DB_NAME))
+	databaseURL := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(env.DB_USER, env.DB_PASSWORD),
+		Host:     net.JoinHostPort(env.DB_HOST, env.DB_PORT),
+		Path:     env.DB_NAME,
+		RawQuery: "sslmode=disable",
+	}
+
+	pool, err := pgxpool.New(context.Background(), databaseURL.String())
 	if err != nil {
 		slog.Error("postgres connect failed", "error", err)
 		return
